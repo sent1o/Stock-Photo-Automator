@@ -1,4 +1,4 @@
-<img width="906" height="787" alt="Screenshot 2026-05-28 191239" src="https://github.com/user-attachments/assets/945ada5c-6cc3-47a1-be26-ed0bb93382c4" />
+<img width="901" height="781" alt="Screenshot 2026-05-28 191239" src="https://github.com/user-attachments/assets/e1886c18-f39f-4e0c-8ee6-de6c3f48252b" />
 
 # 🚀 Stock Photo Automator (Fooocus Pipeline)
 
