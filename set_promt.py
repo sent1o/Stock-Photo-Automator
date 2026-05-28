@@ -14,23 +14,23 @@ class PromptManager:
             lines = [line.strip() for line in prompts_text.split('\n') if line.strip()]
             
             if not lines:
-                return False, "Список промптів порожній (немає що зберігати)."
+                return False, "Список промптов пуст (нечего сохранять)."
 
             with open(self.stock_file, "w", encoding="utf-8") as f:
                 f.write('\n'.join(lines))
                 
-            return True, f"Збережено промптів: {len(lines)}."
+            return True, f"Сохранено промптов: {len(lines)}."
             
         except Exception as e:
-            return False, f"Помилка збереження промптів: {e}"
+            return False, f"Ошибка сохранения промптов: {e}"
 
     def load_prompts(self):
         try:
             if not os.path.exists(self.stock_file):
-                return True, "" # Файлу ще немає, це не помилка
+                return True, "" # Файла еще нет, это не ошибка
                 
             with open(self.stock_file, "r", encoding="utf-8") as f:
                 return True, f.read()
                 
         except Exception as e:
-            return False, f"Помилка читання промптів: {e}"
+            return False, f"Ошибка чтения промптов: {e}"

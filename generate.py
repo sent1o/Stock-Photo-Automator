@@ -3,6 +3,7 @@ import time
 import glob
 import shutil
 import socket 
+import subprocess
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
 
 class FooocusGenerator:
@@ -18,21 +19,29 @@ class FooocusGenerator:
         else:
             print(message)
 
+    def _ensure_playwright_browsers(self):
+        """Перевіряє і встановлює Chromium для Playwright, якщо його немає"""
+        try:
+            subprocess.run(["playwright", "install", "chromium"], check=True, capture_output=True)
+        except Exception:
+            self._log("Установка браузера для Playwright...")
+            subprocess.run(["python", "-m", "playwright", "install", "chromium"], capture_output=True)
+
     def _read_prompts(self):
         if not os.path.exists(self.wildcards_file):
-            self._log("Помилка: Файл із промптами не знайдено.")
+            self._log("Ошибка: Файл с промптами не найден.")
             return []
         with open(self.wildcards_file, "r", encoding="utf-8") as f:
             return [line.strip() for line in f if line.strip()]
 
     def wait_for_server(self, port=7865, timeout=600):
-        self._log("Очікування підключення до сервера Fooocus...")
+        self._log("Ожидание подключения к серверу Fooocus...")
         start_time = time.time()
         while time.time() - start_time < timeout:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
                 sock.settimeout(1)
                 if sock.connect_ex(('127.0.0.1', port)) == 0:
-                    self._log("З'єднання із сервером встановлено.")
+                    self._log("Соединение с сервером установлено.")
                     time.sleep(3)
                     return True
             time.sleep(3)
@@ -41,30 +50,32 @@ class FooocusGenerator:
     def run_generation(self, status_callback=None):
         self.status_callback = status_callback
         
+        self._ensure_playwright_browsers()
+        
         prompts = self._read_prompts()
         if not prompts:
-            self._log("Генерацію скасовано: відсутні промпти.")
-            return False, "Немає промптів."
+            self._log("Генерация отменена: отсутствуют промпты.")
+            return False, "Нет промптов."
         
         target_count = min(32, len(prompts))
         
         if not self.wait_for_server():
-            self._log("Помилка: Сервер Fooocus не відповідає.")
+            self._log("Ошибка: Сервер Fooocus не отвечает.")
             return False, "Тайм-аут сервера."
 
         browser = None
         playwright = None
         try:
-            self._log("Ініціалізація середовища генерації...")
+            self._log("Инициализация среды генерации...")
             playwright = sync_playwright().start()
             browser = playwright.chromium.launch(headless=False)
             page = browser.new_page()
             page.goto("http://127.0.0.1:7865")
             
-            self._log("Завантаження моделей інтерфейсу...")
+            self._log("Загрузка моделей интерфейса...")
             page.wait_for_selector('#generate_button:not([disabled])', timeout=120000)
             
-            self._log("Налаштування параметрів зображення...")
+            self._log("Настройка параметров изображения...")
             page.locator('#positive_prompt textarea').fill('__stock__')
             
             page.locator('#component-23 input[type="checkbox"]').check(force=True)
@@ -89,24 +100,23 @@ class FooocusGenerator:
             page.locator('.tab-nav button', has_text='Debug Tools').click()
             page.locator('#component-296 input[type="checkbox"]').check(force=True)
 
-            self._log("Параметри застосовано. Запуск процесу...")
+            self._log("Параметры применены. Запуск процесса...")
             page.locator('#generate_button').click()
 
-            self._log(f"Генерація ({target_count} зобр.) триває. Це займе певний час...")
+            self._log(f"Генерация ({target_count} изобр.) идет. Это займет некоторое время...")
             page.locator('#generate_button').wait_for(state="hidden", timeout=10000)
-            page.locator('#generate_button').wait_for(state="visible", timeout=0) # Безлімітне очікування
+            page.locator('#generate_button').wait_for(state="visible", timeout=0) # Безлимитное ожидание
             
             time.sleep(3) 
-            self._log("Генерацію завершено. Обробка файлів...")
+            self._log("Генерация завершена. Обработка файлов...")
             
         except PlaywrightTimeoutError:
-            self._log("Помилка: Час очікування браузера вичерпано. Можливо, нестача пам'яті.")
-            return False, "Тайм-аут генерації."
+            self._log("Ошибка: Время ожидания браузера истекло. Возможно, нехватка памяти.")
+            return False, "Тайм-аут генерации."
         except Exception as e:
-            self._log(f"Критична помилка процесу: {str(e)}")
-            return False, f"Помилка: {e}"
+            self._log(f"Критическая ошибка процесса: {str(e)}")
+            return False, f"Ошибка: {e}"
         finally:
-            # Гарантовано закриваємо браузер, навіть якщо була помилка
             if browser:
                 try:
                     browser.close()
@@ -118,12 +128,11 @@ class FooocusGenerator:
                 except:
                     pass
 
-        # Перенесення файлів робимо після закриття браузера
         self.move_to_test_in(target_count)
-        return True, "Генерація успішна."
+        return True, "Генерация успешна."
 
     def move_to_test_in(self, target_count):
-        self._log("Переміщення готових зображень у директорію перевірки...")
+        self._log("Перемещение готовых изображений в директорию проверки...")
         base_dir = os.path.dirname(os.path.abspath(__file__))
         test_in_dir = os.path.join(base_dir, "1_To_Upscale")
                 
@@ -147,6 +156,6 @@ class FooocusGenerator:
                 pass
                 
         if moved > 0:
-            self._log(f"Успішно переміщено {moved} зобр. Зображення готові до перевірки.")
+            self._log(f"Успешно перемещено {moved} изобр. Изображения готовы к проверке.")
         else:
-            self._log("Увага: Не знайдено нових зображень для переміщення.")
+            self._log("Внимание: Не найдено новых изображений для перемещения.")

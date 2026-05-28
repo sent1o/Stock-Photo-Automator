@@ -5,7 +5,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from PyQt6.QtCore import QObject, QSettings, QThread, QTimer, pyqtSignal as Signal, Qt
-from PyQt6.QtGui import QFont
+from PyQt6.QtGui import QFont, QIcon
 from PyQt6.QtWidgets import (
     QApplication, QFileDialog, QFrame, QGridLayout, QLabel,
     QLineEdit, QMainWindow, QPushButton, QSizePolicy, QTextEdit,
@@ -18,8 +18,7 @@ from upscale import FooocusUpscaler
 from metadata import MetadataInjector
 
 load_dotenv()
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY") 
 APP_ORG = "StockPhotoAutomator"
 APP_NAME = "FooocusLandingUI"
 
@@ -94,6 +93,8 @@ class StockPhotoAutomatorWindow(QMainWindow):
         self.status_history = ["", "", ""]
 
         self.setWindowTitle("Stock Photo Automator")
+        icon_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "_internal", "icon.ico")
+        self.setWindowIcon(QIcon(icon_path))
         self.setMinimumSize(850, 700)
         self.resize(900, 750)
 

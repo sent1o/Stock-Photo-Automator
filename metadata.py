@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup
 from iptcinfo3 import IPTCInfo
 from dotenv import load_dotenv
 
-# Вимикаємо спам від iptcinfo в консоль
+# Отключаем спам от iptcinfo в консоль
 logging.getLogger('iptcinfo').setLevel(logging.ERROR)
 
 class MetadataInjector:
@@ -20,14 +20,14 @@ class MetadataInjector:
         self.status_callback = None
 
     def _log(self, message):
-        """Передає лог у UI, якщо підключено колбек, інакше друкує в консоль"""
+        """Передает лог в UI, если подключен коллбек, иначе печатает в консоль"""
         if self.status_callback:
             self.status_callback(message)
         else:
             print(message)
 
     def _get_prompt_from_logs(self, original_png_name):
-        # Спочатку шукаємо в кеші
+        # Сначала ищем в кэше
         for cached_file, prompt in self.log_cache.items():
             if cached_file == original_png_name:
                 return prompt
@@ -58,7 +58,7 @@ class MetadataInjector:
                                 if file_name == original_png_name:
                                     return self.log_cache[file_name]
             except Exception:
-                continue # Ігноруємо биті HTML файли і йдемо далі
+                continue # Игнорируем битые HTML файлы и идем дальше
                 
         return None
 
@@ -79,20 +79,20 @@ class MetadataInjector:
         self.status_callback = status_callback
         
         if not self.openai_key:
-            self._log("Помилка: API ключ OpenAI не вказано.")
-            return False, "Відсутній API ключ OpenAI."
+            self._log("Ошибка: API ключ OpenAI не указан.")
+            return False, "Отсутствует API ключ OpenAI."
 
-        self._log("Ініціалізація прошивки метаданих...")
+        self._log("Инициализация прошивки метаданных...")
         
         if not os.path.exists(self.upscale_dir):
             folder_name = os.path.basename(self.upscale_dir)
-            self._log("Помилка: Директорія для апскейлу не знайдена.")
-            return False, f"Папка {folder_name} не існує."
+            self._log("Ошибка: Директория для апскейла не найдена.")
+            return False, f"Папка {folder_name} не существует."
 
         images = [f for f in os.listdir(self.upscale_dir) if f.lower().endswith(('.jpg', '.jpeg'))]
         if not images:
-            self._log("Операцію скасовано: відсутні JPEG зображення для обробки.")
-            return False, "Немає зображень для обробки."
+            self._log("Операция отменена: отсутствуют JPEG изображения для обработки.")
+            return False, "Нет изображений для обработки."
 
         client = openai.OpenAI(api_key=self.openai_key)
         success_count = 0
@@ -101,14 +101,14 @@ class MetadataInjector:
             original_png = img_name.replace("upscaled_", "")
             original_png = os.path.splitext(original_png)[0] + ".png"
             
-            self._log(f"[{index}/{len(images)}] Аналіз логів для файлу {img_name}...")
+            self._log(f"[{index}/{len(images)}] Анализ логов для файла {img_name}...")
             prompt = self._get_prompt_from_logs(original_png)
 
             if not prompt:
-                self._log(f"Увага: Промпт для {img_name} не знайдено в логах. Пропуск.")
+                self._log(f"Внимание: Промпт для {img_name} не найден в логах. Пропуск.")
                 continue
 
-            self._log(f"[{index}/{len(images)}] Отримання даних від OpenAI...")
+            self._log(f"[{index}/{len(images)}] Получение данных от OpenAI...")
             sys_prompt = (
                 "You are an expert stock photography contributor. Based on the given image generation prompt, "
                 "create metadata for stock agencies in JSON format. Requirements: 'title': 5 to 8 words maximum. "
@@ -128,11 +128,11 @@ class MetadataInjector:
                 )
                 meta_data = json.loads(response.choices[0].message.content)
             except Exception as e:
-                self._log(f"Помилка API OpenAI для {img_name}: {str(e)}")
+                self._log(f"Ошибка API OpenAI для {img_name}: {str(e)}")
                 continue
 
             img_path = os.path.join(self.upscale_dir, img_name)
-            self._log(f"[{index}/{len(images)}] Інтеграція IPTC метаданих...")
+            self._log(f"[{index}/{len(images)}] Интеграция IPTC метаданных...")
             
             try:
                 iptc = IPTCInfo(img_path, force=True)
@@ -145,27 +145,28 @@ class MetadataInjector:
                 
                 iptc.save()
                 
-                # Видаляємо бекап файл, який створює iptcinfo3
+                # Удаляем бэкап файл, который создает iptcinfo3
                 bak_file = img_path + "~"
                 if os.path.exists(bak_file):
                     os.remove(bak_file)
                     
-                self._log(f"[{index}/{len(images)}] Успішно прошито (Ключів: {len(clean_keywords)})")
+                self._log(f"[{index}/{len(images)}] Успешно прошито (Ключей: {len(clean_keywords)})")
                 success_count += 1
                 
             except Exception as e:
-                self._log(f"Помилка запису IPTC для {img_name}: {str(e)}")
+                self._log(f"Ошибка записи IPTC для {img_name}: {str(e)}")
 
-        self._log(f"Процес завершено. Успішно оброблено зображень: {success_count} з {len(images)}.")
-        return True, "Метадані успішно прошито."
+        self._log(f"Процесс завершен. Успешно обработано изображений: {success_count} из {len(images)}.")
+        return True, "Метаданные успешно прошиты."
 
 if __name__ == "__main__":
     load_dotenv()
     
     base_dir = os.path.dirname(os.path.abspath(__file__))
     UPSCALE_DIR = os.path.join(base_dir, "2_Ready_Stock")
+    # Только для локального теста
     FOOOCUS_DIR = r"D:\Stocks\Fooocus_win64_2-5-0" 
-    OPENAI_KEY = os.getenv("OPENAI_API_KEY")
+    OPENAI_KEY = os.getenv("OPENAI_API_KEY") 
     
     injector = MetadataInjector(UPSCALE_DIR, FOOOCUS_DIR, OPENAI_KEY)
     injector.process()
