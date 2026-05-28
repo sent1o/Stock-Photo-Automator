@@ -1,4 +1,5 @@
-<img width="743" height="172" alt="Screenshot 2026-02-19 163401" src="https://github.com/user-attachments/assets/7e817f91-7c7b-4eeb-85fd-80a786366502" />
+<img width="906" height="787" alt="Screenshot 2026-05-28 191239" src="https://github.com/user-attachments/assets/945ada5c-6cc3-47a1-be26-ed0bb93382c4" />
+
 # 🚀 Stock Photo Automator (Fooocus Pipeline)
 
 A desktop application designed to fully automate the workflow of generating, upscaling, and tagging AI-generated images for stock photography platforms. 
