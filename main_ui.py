@@ -355,7 +355,7 @@ class StockPhotoAutomatorWindow(QMainWindow):
         
         try:
             subprocess.Popen(["cmd.exe", "/c", "start", "", bat_path], cwd=root_folder, shell=True)
-            self.update_status("Сервер успешно запущен в фоновом режиме. Ожидание готовности...")
+            self.update_status("Запуск сервера в фоновом режиме. Ожидание готовности...")
         except Exception as e:
             self.update_status(f"❌ Ошибка запуска сервера: {e}")
 
@@ -372,17 +372,6 @@ class StockPhotoAutomatorWindow(QMainWindow):
             self.update_status("✅ Интерфейс открыт в вашем браузере.")
         except Exception as e:
             self.update_status(f"❌ Ошибка открытия браузера: {e}")
-
-        import subprocess
-        root_folder = self.root_folder_input.text().strip()
-        bat_path = os.path.join(root_folder, "run.bat")
-        
-        self.update_status("Запуск Fooocus в ручном режиме...")
-        try:
-            subprocess.Popen(["cmd.exe", "/c", "start", "", bat_path], cwd=root_folder, shell=True)
-            self.update_status("Сервер запущен. Интерфейс будет доступен по адресу http://127.0.0.1:7865")
-        except Exception as e:
-            self.update_status(f"❌ Ошибка запуска сервера: {e}")
 
     def _start_generation(self):
         prompts_text = self.prompts_input.toPlainText()
@@ -430,10 +419,12 @@ class StockPhotoAutomatorWindow(QMainWindow):
             QLabel#BlockTitle { color: #ffffff; font-size: 13pt; }
             QLabel#HistoryStatus { background: transparent; color: #666666; font-size: 9pt; }
             QTextEdit#LogHistory { background: transparent; border: none; border-radius: 0px; border-left: 4px solid #00c6ff; color: #666666; font-size: 9pt; padding: 0px 8px; }
-            QTextEdit#LogHistory QScrollBar:vertical { background: transparent; width: 8px; }
-            QTextEdit#LogHistory QScrollBar::handle:vertical { background: #444; border-radius: 0px; }
+            QTextEdit#LogHistory QScrollBar:vertical { background: #222428; width: 6px; }
+            QTextEdit#LogHistory QScrollBar::track:vertical { background: #222428; border: none; }
+            QTextEdit#LogHistory QScrollBar::handle:vertical { background: #444; border-radius: 3px; }
             QTextEdit#LogHistory QScrollBar::add-line:vertical, QTextEdit#LogHistory QScrollBar::sub-line:vertical { height: 0px; }
-            QLabel#CurrentStatus { background: #222428; border-left: 4px solid #00c6ff; color: #00c6ff; font-family: Consolas, monospace; font-size: 10pt; padding: 10px 12px; border-top-right-radius: 6px; border-bottom-right-radius: 6px; }
+            QTextEdit#LogHistory QScrollBar::add-page:vertical, QTextEdit#LogHistory QScrollBar::sub-page:vertical { background: #222428; }
+            QLabel#CurrentStatus { background: #121315; border-left: 4px solid #00c6ff; color: #00c6ff; font-family: Consolas, monospace; font-size: 10pt; padding: 10px 12px; border-top-right-radius: 6px; border-bottom-right-radius: 6px; }
             QLineEdit, QTextEdit { background: #121315; border: 1px solid #333; border-radius: 6px; padding: 8px; }
             QPushButton { border-radius: 8px; font-weight: bold; color: white; padding: 6px; }
             QPushButton:disabled { background: #333333; color: #666; }
