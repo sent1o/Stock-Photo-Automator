@@ -76,15 +76,14 @@ class BackendWorker(QObject):
                 if not success:
                     return
 
-                self.status_update.emit("Ініціалізація модуля прошивки метаданих...")
+                self.status_update.emit("Инициализация модуля прошивки метаданных...")
                 injector = MetadataInjector(out_dir, self.root_folder, OPENAI_API_KEY)
                 injector.process(status_callback=self.status_update.emit)
                 
         except Exception as e:
-            self.status_update.emit(f"❌ Критичний збій процесу. Деталі: {e}")
+            self.status_update.emit(f"❌ Критический сбой процесса. Детали: {e}")
         finally:
             self.finished.emit()
-
 
 class StockPhotoAutomatorWindow(QMainWindow):
     def __init__(self):
@@ -102,7 +101,7 @@ class StockPhotoAutomatorWindow(QMainWindow):
         self._apply_styles()
         self._load_settings()
 
-        self.update_status("Систему ініціалізовано. Очікування команд...")
+        self.update_status("Система инициализирована. Ожидание команд...")
 
         self.state_timer = QTimer(self)
         self.state_timer.timeout.connect(self._check_dynamic_states)
@@ -137,28 +136,37 @@ class StockPhotoAutomatorWindow(QMainWindow):
         return block, layout
 
     def _create_settings_block(self):
-        block, layout = self._create_block("⚙️ Налаштування шляхів")
-        form = QGridLayout()
-        form.setColumnStretch(1, 1)
+        block, layout = self._create_block("  ⛯ Настройки путей")
 
+        path_badge = QFrame()
+        path_badge.setObjectName("PathBadge")
+        badge_layout = QHBoxLayout(path_badge)
+        badge_layout.setContentsMargins(10, 5, 5, 5)
+        badge_layout.setSpacing(10)
+
+        label = QLabel("  Папка Fooocus: ")
+        label.setObjectName("BadgeLabel")
+        
         self.root_folder_input = QLineEdit()
         self.root_folder_input.setReadOnly(True)
-        self.browse_button = QPushButton("Огляд")
+        self.root_folder_input.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.root_folder_input.setObjectName("BadgeInput")
+
+        self.browse_button = QPushButton("🗁")
         self.browse_button.setObjectName("SecondaryButton")
         self.browse_button.clicked.connect(self._browse_root_folder)
 
-        form.addWidget(QLabel("Папка Fooocus"), 0, 0)
-        form.addWidget(self.root_folder_input, 0, 1)
-        form.addWidget(self.browse_button, 0, 2)
+        badge_layout.addWidget(label)
+        badge_layout.addWidget(self.root_folder_input, stretch=1)
+        badge_layout.addWidget(self.browse_button)
         
-        layout.addLayout(form)
-
+        layout.addWidget(path_badge)
         folders_layout = QHBoxLayout()
-        self.btn_open_in = QPushButton("🔳 К проверке")
+        self.btn_open_in = QPushButton("✖ К проверке")
         self.btn_open_in.setObjectName("FolderButtonIn")
         self.btn_open_in.clicked.connect(lambda: self._open_folder(FOLDER_IN))
         
-        self.btn_open_out = QPushButton("✅ Апскейл")
+        self.btn_open_out = QPushButton("🗹 Апскейл")
         self.btn_open_out.setObjectName("FolderButtonOut")
         self.btn_open_out.clicked.connect(lambda: self._open_folder(FOLDER_OUT))
         
@@ -169,17 +177,31 @@ class StockPhotoAutomatorWindow(QMainWindow):
         return block
 
     def _create_fooocus_control_block(self):
-        block, layout = self._create_block("Контроль Fooocus")
+        block, layout = self._create_block(" ┆ Управление Fooocus")
         
-        self.start_server_button = QPushButton("🚀 Запустити Fooocus")
+        self.start_server_button = QPushButton("Запустить Fooocus ⏻")
         self.start_server_button.setObjectName("FooocusButton")
-        self.start_server_button.setMinimumHeight(45)
+        self.start_server_button.setMinimumHeight(55)
         self.start_server_button.clicked.connect(self._start_fooocus_server)
         
-        self.start_manual_button = QPushButton("🌐 Відкрити інтерфейс\nдля звичайного використання")
+        self.start_manual_button = QPushButton()
         self.start_manual_button.setObjectName("SecondaryButton")
         self.start_manual_button.setMinimumHeight(45)
         self.start_manual_button.clicked.connect(self._start_fooocus_manual)
+        
+        btn_layout = QHBoxLayout(self.start_manual_button)
+        btn_layout.setContentsMargins(15, 0, 15, 0)
+        
+        text_label = QLabel("Открыть веб-интерфейс\nдля ручного использования")
+        text_label.setObjectName("ManualBtnText")
+        text_label.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        
+        icon_label = QLabel("✦")
+        icon_label.setObjectName("ManualBtnIcon")
+        icon_label.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        
+        btn_layout.addWidget(text_label, alignment=Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        btn_layout.addWidget(icon_label, alignment=Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         
         layout.addWidget(self.start_server_button)
         layout.addWidget(self.start_manual_button)
@@ -187,37 +209,38 @@ class StockPhotoAutomatorWindow(QMainWindow):
         return block
 
     def _create_main_action_block(self):
-        block, layout = self._create_block("🎨 Генерація та Апскейл")
+        block, layout = self._create_block(" ❯❯❯❯ Генерация и Апскейл")
 
         self.prompts_input = QTextEdit()
-        self.prompts_input.setPlaceholderText("Вставте промпти сюди, кожен з нового рядка...")
-        self.prompts_input.setMinimumHeight(150)
-        layout.addWidget(self.prompts_input)
+        self.prompts_input.setPlaceholderText("Введите список промптов. Каждый промпт должен начинаться с новой строки...")
+        layout.addWidget(self.prompts_input, stretch=1) 
 
         buttons_layout = QHBoxLayout()
         buttons_layout.setSpacing(15)
 
         gen_layout = QVBoxLayout()
-        self.generate_button = QPushButton("🚀 Запустити генерацію")
+        self.generate_button = QPushButton("▶︎ Запустить генерацию")
         self.generate_button.setObjectName("PrimaryButton")
-        self.generate_button.setMinimumHeight(45)
+        self.generate_button.setMinimumHeight(55)
         self.generate_button.clicked.connect(self._start_generation)
         
-        gen_hint = QLabel("Вставте список промптів і запустіть\nавтоматизовану генерацію")
+        gen_hint = QLabel("🛈 Добавьте промпты для старта пакетной генерации.")
         gen_hint.setObjectName("HistoryStatus")
+        gen_hint.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         gen_hint.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignHCenter)
         
         gen_layout.addWidget(self.generate_button)
         gen_layout.addWidget(gen_hint)
 
         up_layout = QVBoxLayout()
-        self.upscale_button = QPushButton("🔥 Запустити Апскейл та Прошивку")
+        self.upscale_button = QPushButton("🗐 Апскейл и прошивка метаданных")
         self.upscale_button.setObjectName("SuccessButton")
-        self.upscale_button.setMinimumHeight(45)
+        self.upscale_button.setMinimumHeight(55)
         self.upscale_button.clicked.connect(self._start_upscale_metadata)
         
-        up_hint = QLabel(f"Відібрані фото мають бути у папці {FOLDER_IN}.\nЕтап автоматизує підготовку для стоків.")
+        up_hint = QLabel(f"🛈 Фото для обработки должны быть в папке {FOLDER_IN}.")
         up_hint.setObjectName("HistoryStatus")
+        up_hint.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         up_hint.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignHCenter)
 
         up_layout.addWidget(self.upscale_button)
@@ -230,33 +253,39 @@ class StockPhotoAutomatorWindow(QMainWindow):
         return block
 
     def _create_status_block(self):
-        block, layout = self._create_block("📄 Журнал процесу")
+        block, layout = self._create_block(" ☰ Журнал процесса")
         
-        self.hist_label_1 = QLabel("")
-        self.hist_label_2 = QLabel("")
-        self.hist_label_3 = QLabel("")
+        log_layout = QVBoxLayout()
+        log_layout.setSpacing(0)
+        log_layout.setContentsMargins(0, 0, 0, 0)
         
-        self.current_status_label = QLabel("Очікування...")
+        self.log_history = QTextEdit()
+        self.log_history.setObjectName("LogHistory")
+        self.log_history.setReadOnly(True)
+        self.log_history.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.log_history.setFixedHeight(95)
+        self.log_history.setText("\n\n\n\n")
+        
+        self.current_status_label = QLabel("Ожидание...")
         self.current_status_label.setObjectName("CurrentStatus")
         self.current_status_label.setWordWrap(True)
         
-        for lbl in [self.hist_label_1, self.hist_label_2, self.hist_label_3]:
-            lbl.setObjectName("HistoryStatus")
-            layout.addWidget(lbl)
-            
-        layout.addWidget(self.current_status_label)
-        layout.addStretch()
+        log_layout.addWidget(self.log_history)
+        log_layout.addWidget(self.current_status_label)
+        
+        layout.addLayout(log_layout)
         return block
 
     def update_status(self, text):
-        self.status_history.pop(0)
-        self.status_history.append(self.current_status_label.text())
+        old_text = self.current_status_label.text()
         
-        self.hist_label_1.setText(self.status_history[0])
-        self.hist_label_2.setText(self.status_history[1])
-        self.hist_label_3.setText(self.status_history[2])
-        
+        if old_text and old_text != "Ожидание...":
+            self.log_history.append(old_text)
+            
         self.current_status_label.setText(text)
+        
+        scrollbar = self.log_history.verticalScrollBar()
+        scrollbar.setValue(scrollbar.maximum())
 
     def _check_dynamic_states(self):
         root_folder = self.root_folder_input.text().strip()
@@ -273,10 +302,10 @@ class StockPhotoAutomatorWindow(QMainWindow):
             has_photos = any(f.lower().endswith(('.png', '.jpg', '.jpeg')) for f in os.listdir(in_dir))
             
         if has_photos:
-            self.btn_open_in.setText("☑️ К проверке")
+            self.btn_open_in.setText("🗹 К проверке")
             self.btn_open_in.setProperty("has_files", True)
         else:
-            self.btn_open_in.setText("🔳 К проверке")
+            self.btn_open_in.setText("✖ К проверке")
             self.btn_open_in.setProperty("has_files", False)
             
         self.btn_open_in.style().unpolish(self.btn_open_in)
@@ -288,10 +317,10 @@ class StockPhotoAutomatorWindow(QMainWindow):
             has_out_photos = any(f.lower().endswith(('.png', '.jpg', '.jpeg')) for f in os.listdir(out_dir))
             
         if has_out_photos:
-            self.btn_open_out.setText("✅ Апскейл")
+            self.btn_open_out.setText("🗹 Апскейл")
             self.btn_open_out.setProperty("has_files", True)
         else:
-            self.btn_open_out.setText("🟩 Апскейл")
+            self.btn_open_out.setText("✖ Апскейл")
             self.btn_open_out.setProperty("has_files", False)
             
         self.btn_open_out.style().unpolish(self.btn_open_out)
@@ -314,46 +343,46 @@ class StockPhotoAutomatorWindow(QMainWindow):
 
     def _start_fooocus_server(self):
         if is_fooocus_running():
-            self.update_status("⚠️ Сервер Fooocus вже запущено та працює на порту 7865.")
+            self.update_status("⚠️ Сервер Fooocus уже запущен и работает на порту 7865.")
             return
 
         import subprocess
         root_folder = self.root_folder_input.text().strip()
         bat_path = os.path.join(root_folder, "run.bat")
         
-        self.update_status("Ініціалізація локального сервера Fooocus...")
+        self.update_status("Инициализация локального сервера Fooocus...")
         patch_fooocus_bat(root_folder)
         
         try:
             subprocess.Popen(["cmd.exe", "/c", "start", "", bat_path], cwd=root_folder, shell=True)
-            self.update_status("Сервер успішно запущено у фоновому режимі. Очікування готовності...")
+            self.update_status("Сервер успешно запущен в фоновом режиме. Ожидание готовности...")
         except Exception as e:
-            self.update_status(f"❌ Помилка запуску сервера: {e}")
+            self.update_status(f"❌ Ошибка запуска сервера: {e}")
 
     def _start_fooocus_manual(self):
         import webbrowser
         
         if not is_fooocus_running():
-            self.update_status("⚠️ Сервер Fooocus ще не запущено! Спочатку запустіть його.")
+            self.update_status("⚠️ Сервер Fooocus еще не запущен! Сначала запустите его.")
             return
 
-        self.update_status("Відкриваю інтерфейс Fooocus у браузері...")
+        self.update_status("Открываю интерфейс Fooocus в браузере...")
         try:
             webbrowser.open("http://127.0.0.1:7865")
-            self.update_status("✅ Інтерфейс відкрито у вашому браузері.")
+            self.update_status("✅ Интерфейс открыт в вашем браузере.")
         except Exception as e:
-            self.update_status(f"❌ Помилка відкриття браузера: {e}")
+            self.update_status(f"❌ Ошибка открытия браузера: {e}")
 
         import subprocess
         root_folder = self.root_folder_input.text().strip()
         bat_path = os.path.join(root_folder, "run.bat")
         
-        self.update_status("Запуск Fooocus у ручному режимі...")
+        self.update_status("Запуск Fooocus в ручном режиме...")
         try:
             subprocess.Popen(["cmd.exe", "/c", "start", "", bat_path], cwd=root_folder, shell=True)
-            self.update_status("Сервер запущено. Інтерфейс буде доступний за адресою http://127.0.0.1:7865")
+            self.update_status("Сервер запущен. Интерфейс будет доступен по адресу http://127.0.0.1:7865")
         except Exception as e:
-            self.update_status(f"❌ Помилка запуску сервера: {e}")
+            self.update_status(f"❌ Ошибка запуска сервера: {e}")
 
     def _start_generation(self):
         prompts_text = self.prompts_input.toPlainText()
@@ -361,7 +390,7 @@ class StockPhotoAutomatorWindow(QMainWindow):
 
     def _start_upscale_metadata(self):
         if not OPENAI_API_KEY:
-            self.update_status("❌ Помилка: Ключ OpenAI API не знайдено у файлі .env!")
+            self.update_status("❌ Ошибка: Ключ OpenAI API не найден в файле .env!")
             return
         self._run_worker("upscale", self.upscale_button)
 
@@ -399,51 +428,36 @@ class StockPhotoAutomatorWindow(QMainWindow):
             QMainWindow, QWidget { background: #18191c; color: #d4d4d4; }
             QFrame#Block { background: #222428; border-radius: 12px; }
             QLabel#BlockTitle { color: #ffffff; font-size: 13pt; }
-            QLabel#HistoryStatus { color: #666666; font-size: 9pt; }
-            QLabel#CurrentStatus { color: #ffffff; font-size: 12pt; font-weight: bold; }
+            QLabel#HistoryStatus { background: transparent; color: #666666; font-size: 9pt; }
+            QTextEdit#LogHistory { background: transparent; border: none; border-radius: 0px; border-left: 4px solid #00c6ff; color: #666666; font-size: 9pt; padding: 0px 8px; }
+            QTextEdit#LogHistory QScrollBar:vertical { background: transparent; width: 8px; }
+            QTextEdit#LogHistory QScrollBar::handle:vertical { background: #444; border-radius: 0px; }
+            QTextEdit#LogHistory QScrollBar::add-line:vertical, QTextEdit#LogHistory QScrollBar::sub-line:vertical { height: 0px; }
+            QLabel#CurrentStatus { background: #222428; border-left: 4px solid #00c6ff; color: #00c6ff; font-family: Consolas, monospace; font-size: 10pt; padding: 10px 12px; border-top-right-radius: 6px; border-bottom-right-radius: 6px; }
             QLineEdit, QTextEdit { background: #121315; border: 1px solid #333; border-radius: 6px; padding: 8px; }
             QPushButton { border-radius: 8px; font-weight: bold; color: white; padding: 6px; }
             QPushButton:disabled { background: #333333; color: #666; }
-            
+            QPushButton#PrimaryButton, QPushButton#SuccessButton { border: 1px solid transparent; font-size: 11pt; }
             QPushButton#PrimaryButton { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #00c6ff, stop:1 #0072ff); }
-            QPushButton#PrimaryButton:hover { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #0072ff, stop:1 #00c6ff); }
-            
+            QPushButton#PrimaryButton:hover { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #0072ff, stop:1 #00c6ff); border: 1px solid #ffffff; }
             QPushButton#SuccessButton { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #ff7e5f, stop:1 #feb47b); }
-            QPushButton#SuccessButton:hover { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #feb47b, stop:1 #ff7e5f); }
-            
-            QPushButton#FooocusButton { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #11998e, stop:1 #38ef7d); }
-            
-            QPushButton#SecondaryButton { background: #2c2f35; border: 1px solid #444; }
+            QPushButton#SuccessButton:hover { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #feb47b, stop:1 #ff7e5f); border: 1px solid #ffffff; }
+            QPushButton#PrimaryButton:disabled, QPushButton#SuccessButton:disabled { background: #2a2d32; color: #555555; border: 1px dashed #444444; }
+            QPushButton#FooocusButton { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #11998e, stop:1 #38ef7d); font-size: 16pt; font-weight: bold; padding-bottom: 10px; }
+            QPushButton#FooocusButton:hover { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #38ef7d, stop:1 #11998e); }
+            QPushButton#SecondaryButton { background: #2c2f35; border: 1px solid #444; font-size: 8pt; }
             QPushButton#SecondaryButton:hover { background: #3c4048; }
-            
-            QPushButton#FolderButtonIn, QPushButton#FolderButtonOut { 
-                background: transparent; 
-                border: 1px solid #444; 
-                color: #888; 
-            }
-            QPushButton#FolderButtonIn:hover, QPushButton#FolderButtonOut:hover { 
-                border: 1px solid #666; 
-                color: #aaa;
-                background: rgba(255, 255, 255, 0.05);
-            }
-
-            /* Стан "Є файли" для вхідної папки (синій акцент) */
-            QPushButton#FolderButtonIn[has_files="true"] {
-                border: 1px solid #00c6ff;
-                color: #00c6ff;
-            }
-            QPushButton#FolderButtonIn[has_files="true"]:hover {
-                background: rgba(0, 198, 255, 0.1);
-            }
-
-            /* Стан "Є файли" для папки апскейлу (помаранчевий акцент) */
-            QPushButton#FolderButtonOut[has_files="true"] {
-                border: 1px solid #ff7e5f;
-                color: #ff7e5f;
-            }
-            QPushButton#FolderButtonOut[has_files="true"]:hover {
-                background: rgba(255, 126, 95, 0.1);
-            }
+            QLabel#ManualBtnText { background: transparent; font-size: 10pt; font-weight: normal; color: #d4d4d4; }
+            QLabel#ManualBtnIcon { background: transparent; font-size: 18pt; color: #ffffff; }
+            QPushButton#FolderButtonIn, QPushButton#FolderButtonOut { background: transparent; font-size: 11pt; border: 1px solid #444; color: #888; }
+            QPushButton#FolderButtonIn:hover, QPushButton#FolderButtonOut:hover { border: 1px solid #666; color: #aaa; background: rgba(255, 255, 255, 0.05); }
+            QPushButton#FolderButtonIn[has_files="true"] { border: 1px solid #00c6ff; color: #00c6ff; }
+            QPushButton#FolderButtonIn[has_files="true"]:hover { background: rgba(0, 198, 255, 0.1); }
+            QPushButton#FolderButtonOut[has_files="true"] { border: 1px solid #ff7e5f; font-size: 11pt; color: #ff7e5f; }
+            QPushButton#FolderButtonOut[has_files="true"]:hover { background: rgba(255, 126, 95, 0.1); }
+            QFrame#PathBadge { background: #121315; border: 1px solid #333; border-radius: 8px; }
+            QLabel#BadgeLabel { color: #888; font-weight: bold; }
+            QLineEdit#BadgeInput { background: transparent; border: none; color: #d4d4d4; padding: 0px; }
             '''
         )
 
@@ -457,7 +471,7 @@ class StockPhotoAutomatorWindow(QMainWindow):
 
     def _browse_root_folder(self):
         start_dir = self.root_folder_input.text() or str(Path.home())
-        folder = QFileDialog.getExistingDirectory(self, "Оберіть Fooocus Root Folder", start_dir)
+        folder = QFileDialog.getExistingDirectory(self, "Выберите корневую папку Fooocus", start_dir)
         if folder:
             self.root_folder_input.setText(folder)
             self._save_settings()
