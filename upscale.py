@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 import glob
 import shutil
@@ -148,8 +149,10 @@ class FooocusUpscaler:
                     pass
 
 if __name__ == "__main__":
-    # Динамические пути для тестов
-    base_dir = os.path.dirname(os.path.abspath(__file__))
+    if getattr(sys, 'frozen', False):
+        base_dir = os.path.dirname(sys.executable)
+    else:
+        base_dir = os.path.dirname(os.path.abspath(__file__))
     in_dir = os.path.join(base_dir, "1_To_Upscale")
     out_dir = os.path.join(base_dir, "2_Ready_Stock")
     

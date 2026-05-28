@@ -65,7 +65,10 @@ class BackendWorker(QObject):
                 gen.run_generation(status_callback=self.status_update.emit)
                 
             elif self.mode == "upscale":
-                base_dir = os.path.dirname(os.path.abspath(__file__))
+                if getattr(sys, 'frozen', False):
+                    base_dir = os.path.dirname(sys.executable)
+                else:
+                    base_dir = os.path.dirname(os.path.abspath(__file__))
                 in_dir = os.path.join(base_dir, FOLDER_IN)
                 out_dir = os.path.join(base_dir, FOLDER_OUT)
 
@@ -296,7 +299,10 @@ class StockPhotoAutomatorWindow(QMainWindow):
 
         is_running = is_fooocus_running()
 
-        base_dir = os.path.dirname(os.path.abspath(__file__))
+        if getattr(sys, 'frozen', False):
+            base_dir = os.path.dirname(sys.executable)
+        else:
+            base_dir = os.path.dirname(os.path.abspath(__file__))
         in_dir = os.path.join(base_dir, FOLDER_IN)
         has_photos = False
         if os.path.exists(in_dir):
@@ -336,7 +342,10 @@ class StockPhotoAutomatorWindow(QMainWindow):
         self.upscale_button.setEnabled(is_running and has_photos)
 
     def _open_folder(self, folder_name):
-        base_dir = os.path.dirname(os.path.abspath(__file__))
+        if getattr(sys, 'frozen', False):
+            base_dir = os.path.dirname(sys.executable)
+        else:
+            base_dir = os.path.dirname(os.path.abspath(__file__))
         path = os.path.join(base_dir, folder_name)
         if not os.path.exists(path):
             os.makedirs(path)

@@ -1,4 +1,5 @@
 import os
+import sys
 import re
 import json
 import glob
@@ -162,7 +163,10 @@ class MetadataInjector:
 if __name__ == "__main__":
     load_dotenv()
     
-    base_dir = os.path.dirname(os.path.abspath(__file__))
+    if getattr(sys, 'frozen', False):
+        base_dir = os.path.dirname(sys.executable)
+    else:
+        base_dir = os.path.dirname(os.path.abspath(__file__))
     UPSCALE_DIR = os.path.join(base_dir, "2_Ready_Stock")
     # Только для локального теста
     FOOOCUS_DIR = r"D:\Stocks\Fooocus_win64_2-5-0" 

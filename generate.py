@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 import glob
 import shutil
@@ -133,7 +134,10 @@ class FooocusGenerator:
 
     def move_to_test_in(self, target_count):
         self._log("Перемещение готовых изображений в директорию проверки...")
-        base_dir = os.path.dirname(os.path.abspath(__file__))
+        if getattr(sys, 'frozen', False):
+            base_dir = os.path.dirname(sys.executable)
+        else:
+            base_dir = os.path.dirname(os.path.abspath(__file__))
         test_in_dir = os.path.join(base_dir, "1_To_Upscale")
                 
         if not os.path.exists(test_in_dir):
