@@ -1,0 +1,21 @@
+# Environments
+.env
+venv/
+env/
+ENV/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Project specific folders (images)
+1_To_Upscale/
+2_Ready_Stock/
+test_in/
+test_out/
+
+# OS generated files
+.DS_Store
+Thumbs.db

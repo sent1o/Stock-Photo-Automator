@@ -1,0 +1,6 @@
+PyQt6
+playwright
+openai
+beautifulsoup4
+iptcinfo3
+python-dotenv
